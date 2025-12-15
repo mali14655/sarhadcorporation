@@ -95,7 +95,7 @@ const Navbar = () => {
           <Stack direction="row" spacing={1.5} alignItems="center" component={Link} to="/" sx={{ textDecoration: 'none' }}>
             <Box
               component="img"
-              src={`${process.env.PUBLIC_URL}/logosarhad.webp`}
+              src="/logosarhad.webp"
               alt="Sarhad Corporation logo"
               sx={{
                 height: 40,
