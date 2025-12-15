@@ -22,7 +22,7 @@ const About = () => {
           <Grid item xs={12} md={6}>
             <Box
               component="img"
-              src="/about.jpg"
+              src={`${process.env.PUBLIC_URL}/imageabout.webp`}
               alt="About Sarhad Corporation"
               sx={{
                 height: '100%',

@@ -111,7 +111,7 @@ const Hero = () => {
               <Box
                 sx={{
                   height: { xs: 260, md: 360 },
-                  backgroundImage: 'url(/hero.jpg)',
+                  backgroundImage: `url(${process.env.PUBLIC_URL}/hero.jpg)`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
