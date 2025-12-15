@@ -1,9 +1,7 @@
 import React from 'react';
-import { Box, Container, Typography, Button, Stack, Chip, Grid, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Container, Typography, Button, Stack, Chip, Grid } from '@mui/material';
 
 const Hero = () => {
-  const navigate = useNavigate();
 
   const handleScrollToProducts = () => {
     const element = document.getElementById('products');
