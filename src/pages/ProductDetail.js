@@ -14,7 +14,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
-import axios from 'axios';
+import api from '../apiClient';
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -29,7 +29,7 @@ const ProductDetail = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`/api/products/${slug}`);
+      const response = await api.get(`/products/${slug}`);
       setProduct(response.data);
       setLoading(false);
     } catch (err) {

@@ -30,7 +30,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../apiClient';
 
 const AdminDashboard = () => {
   const { isAuthenticated, loading: authLoading, logout } = useAuth();
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await axios.get('/api/products', {
+      const response = await api.get('/products', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(response.data);
@@ -174,7 +174,7 @@ const AdminDashboard = () => {
       const formDataUpload = new FormData();
       files.forEach((file) => formDataUpload.append('images', file));
 
-      const response = await axios.post('/api/products/upload-images', formDataUpload, {
+      const response = await api.post('/products/upload-images', formDataUpload, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -222,12 +222,12 @@ const AdminDashboard = () => {
       };
 
       if (editingProduct) {
-        await axios.put(`/api/products/${editingProduct._id}`, payload, {
+        await api.put(`/products/${editingProduct._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Product updated successfully');
       } else {
-        await axios.post('/api/products', payload, {
+        await api.post('/products', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Product created successfully');
@@ -246,7 +246,7 @@ const AdminDashboard = () => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         const token = localStorage.getItem('adminToken');
-        await axios.delete(`/api/products/${id}`, {
+        await api.delete(`/products/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Product deleted successfully');

@@ -14,7 +14,7 @@ import {
   Stack,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../apiClient';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -28,7 +28,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('/api/products');
+      const response = await api.get('/products');
       setProducts(response.data);
       setLoading(false);
     } catch (err) {
