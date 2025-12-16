@@ -24,6 +24,8 @@ import {
   Alert,
   CircularProgress,
   Chip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -36,9 +38,13 @@ const AdminDashboard = () => {
   const { isAuthenticated, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [heroSlides, setHeroSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [heroDialogOpen, setHeroDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingHero, setEditingHero] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -54,12 +60,19 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef(null);
+  const heroFileInputRef = useRef(null);
+  const [heroFormData, setHeroFormData] = useState({
+    image: '',
+    label: '',
+    order: 0,
+  });
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/admin/login');
     } else if (isAuthenticated) {
       fetchProducts();
+      fetchHeroSlides();
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -74,6 +87,18 @@ const AdminDashboard = () => {
     } catch (err) {
       setError('Failed to load products');
       setLoading(false);
+    }
+  };
+
+  const fetchHeroSlides = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await api.get('/hero', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setHeroSlides(response.data);
+    } catch (err) {
+      console.error('Failed to load hero slides:', err);
     }
   };
 
@@ -262,6 +287,99 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
+  // Hero management functions
+  const handleOpenHeroDialog = (hero = null) => {
+    if (hero) {
+      setEditingHero(hero);
+      setHeroFormData({
+        image: hero.image || '',
+        label: hero.label || '',
+        order: hero.order || 0,
+      });
+    } else {
+      setEditingHero(null);
+      setHeroFormData({
+        image: '',
+        label: '',
+        order: heroSlides.length,
+      });
+    }
+    setHeroDialogOpen(true);
+  };
+
+  const handleCloseHeroDialog = () => {
+    setHeroDialogOpen(false);
+    setEditingHero(null);
+    setHeroFormData({ image: '', label: '', order: 0 });
+  };
+
+  const handleHeroImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError('');
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await api.post('/hero/upload-image', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setHeroFormData({ ...heroFormData, image: response.data.url });
+    } catch (err) {
+      setError('Failed to upload image');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleHeroSubmit = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      const token = localStorage.getItem('adminToken');
+
+      if (editingHero) {
+        await api.put(`/hero/${editingHero._id}`, heroFormData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSuccess('Hero slide updated successfully');
+      } else {
+        await api.post('/hero', heroFormData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSuccess('Hero slide created successfully');
+      }
+
+      fetchHeroSlides();
+      setTimeout(() => {
+        handleCloseHeroDialog();
+      }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to save hero slide');
+    }
+  };
+
+  const handleDeleteHero = async (id) => {
+    if (window.confirm('Are you sure you want to delete this hero slide?')) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        await api.delete(`/hero/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSuccess('Hero slide deleted successfully');
+        fetchHeroSlides();
+      } catch (err) {
+        setError('Failed to delete hero slide');
+      }
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <Box sx={{ py: 10, textAlign: 'center' }}>
@@ -278,17 +396,32 @@ const AdminDashboard = () => {
             Admin Dashboard
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenDialog()}
-              sx={{
-                backgroundColor: '#1e3a5f',
-                '&:hover': { backgroundColor: '#2d4f7a' },
-              }}
-            >
-              Add Product
-            </Button>
+            {activeTab === 0 && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenDialog()}
+                sx={{
+                  backgroundColor: '#1e3a5f',
+                  '&:hover': { backgroundColor: '#2d4f7a' },
+                }}
+              >
+                Add Product
+              </Button>
+            )}
+            {activeTab === 1 && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenHeroDialog()}
+                sx={{
+                  backgroundColor: '#1e3a5f',
+                  '&:hover': { backgroundColor: '#2d4f7a' },
+                }}
+              >
+                Add Hero Slide
+              </Button>
+            )}
             <Button
               variant="outlined"
               startIcon={<LogoutIcon />}
@@ -298,6 +431,11 @@ const AdminDashboard = () => {
             </Button>
           </Box>
         </Box>
+
+        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
+          <Tab label="Products" />
+          <Tab label="Hero Images" />
+        </Tabs>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -310,7 +448,8 @@ const AdminDashboard = () => {
           </Alert>
         )}
 
-        <TableContainer component={Paper}>
+        {activeTab === 0 && (
+          <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
@@ -355,6 +494,62 @@ const AdminDashboard = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
+
+        {activeTab === 1 && (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                  <TableCell sx={{ fontWeight: 600 }}>Image</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Label</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Order</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {heroSlides.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">No hero slides yet. Add one to get started.</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  heroSlides.map((hero) => (
+                    <TableRow key={hero._id}>
+                      <TableCell>
+                        <Box
+                          component="img"
+                          src={hero.image}
+                          alt={hero.label}
+                          sx={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 1 }}
+                        />
+                      </TableCell>
+                      <TableCell>{hero.label || 'No label'}</TableCell>
+                      <TableCell>{hero.order}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleOpenHeroDialog(hero)}
+                          color="primary"
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDeleteHero(hero._id)}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         {/* Product Form Dialog */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
@@ -524,6 +719,79 @@ const AdminDashboard = () => {
             <Button onClick={handleCloseDialog}>Cancel</Button>
             <Button onClick={handleSubmit} variant="contained" disabled={!formData.name || !formData.description}>
               {editingProduct ? 'Update' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Hero Form Dialog */}
+        <Dialog open={heroDialogOpen} onClose={handleCloseHeroDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {editingHero ? 'Edit Hero Slide' : 'Add New Hero Slide'}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Image
+                </Typography>
+                {heroFormData.image && (
+                  <Box
+                    component="img"
+                    src={heroFormData.image}
+                    alt="Hero preview"
+                    sx={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 1, mb: 2 }}
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={heroFileInputRef}
+                  onChange={handleHeroImageUpload}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={() => heroFileInputRef.current?.click()}
+                  fullWidth
+                >
+                  {heroFormData.image ? 'Change Image' : 'Upload Image'}
+                </Button>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Label (Optional)"
+                  value={heroFormData.label}
+                  onChange={(e) => setHeroFormData({ ...heroFormData, label: e.target.value })}
+                  placeholder="e.g., Premium industrial minerals from Pakistan"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Order"
+                  value={heroFormData.order}
+                  onChange={(e) => setHeroFormData({ ...heroFormData, order: parseInt(e.target.value) || 0 })}
+                  helperText="Lower numbers appear first"
+                />
+              </Grid>
+            </Grid>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                {success}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseHeroDialog}>Cancel</Button>
+            <Button onClick={handleHeroSubmit} variant="contained" disabled={!heroFormData.image}>
+              {editingHero ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </Dialog>
