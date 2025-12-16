@@ -349,10 +349,20 @@ const AdminDashboard = () => {
         const formData = new FormData();
         formData.append('image', heroImageFile);
 
-        // Don't set Content-Type header - let axios/browser set it automatically for FormData
-        const uploadResponse = await api.post('/hero/upload-image', formData);
+        try {
+          const uploadResponse = await api.post('/hero/upload-image', formData, {
+            headers: {
+              // Don't set Content-Type - let browser set it with boundary for FormData
+            },
+          });
 
-        imageUrl = uploadResponse.data.url;
+          imageUrl = uploadResponse.data.url;
+        } catch (uploadError) {
+          console.error('Upload error:', uploadError);
+          const errorMessage = uploadError.response?.data?.message || uploadError.message || 'Failed to upload image';
+          setError(errorMessage);
+          return;
+        }
         
         // Clean up preview URL
         if (heroImagePreview && heroImagePreview.startsWith('blob:')) {
