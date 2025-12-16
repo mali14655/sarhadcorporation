@@ -349,12 +349,8 @@ const AdminDashboard = () => {
         const formData = new FormData();
         formData.append('image', heroImageFile);
 
-        const uploadResponse = await api.post('/hero/upload-image', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        // Don't set Content-Type header - let axios/browser set it automatically for FormData
+        const uploadResponse = await api.post('/hero/upload-image', formData);
 
         imageUrl = uploadResponse.data.url;
         
