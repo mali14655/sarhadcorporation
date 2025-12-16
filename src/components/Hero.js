@@ -264,7 +264,7 @@ const Hero = () => {
         )}
       </Container>
 
-      {/* Left Arrow - Middle of screen, no background */}
+      {/* Left Arrow - Middle of screen, no background - Hidden on mobile */}
       <IconButton
         onClick={handlePrev}
         sx={{
@@ -277,6 +277,7 @@ const Hero = () => {
           width: { xs: 48, md: 56 },
           height: { xs: 48, md: 56 },
           backgroundColor: 'transparent',
+          display: { xs: 'none', md: 'flex' },
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             transform: 'translateY(-50%) scale(1.15)',
@@ -288,7 +289,7 @@ const Hero = () => {
         <ArrowBackIosNewIcon sx={{ fontSize: { xs: 28, md: 32 } }} />
       </IconButton>
 
-      {/* Right Arrow - Middle of screen, no background */}
+      {/* Right Arrow - Middle of screen, no background - Hidden on mobile */}
       <IconButton
         onClick={handleNext}
         sx={{
@@ -301,6 +302,7 @@ const Hero = () => {
           width: { xs: 48, md: 56 },
           height: { xs: 48, md: 56 },
           backgroundColor: 'transparent',
+          display: { xs: 'none', md: 'flex' },
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             transform: 'translateY(-50%) scale(1.15)',

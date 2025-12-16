@@ -63,9 +63,10 @@ const AdminDashboard = () => {
   const heroFileInputRef = useRef(null);
   const [heroFormData, setHeroFormData] = useState({
     image: '',
-    label: '',
     order: 0,
   });
+  const [heroImageFile, setHeroImageFile] = useState(null);
+  const [heroImagePreview, setHeroImagePreview] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -293,16 +294,18 @@ const AdminDashboard = () => {
       setEditingHero(hero);
       setHeroFormData({
         image: hero.image || '',
-        label: hero.label || '',
         order: hero.order || 0,
       });
+      setHeroImagePreview(hero.image || null);
+      setHeroImageFile(null);
     } else {
       setEditingHero(null);
       setHeroFormData({
         image: '',
-        label: '',
         order: heroSlides.length,
       });
+      setHeroImagePreview(null);
+      setHeroImageFile(null);
     }
     setHeroDialogOpen(true);
   };
@@ -310,32 +313,27 @@ const AdminDashboard = () => {
   const handleCloseHeroDialog = () => {
     setHeroDialogOpen(false);
     setEditingHero(null);
-    setHeroFormData({ image: '', label: '', order: 0 });
+    setHeroFormData({ image: '', order: 0 });
+    setHeroImageFile(null);
+    setHeroImagePreview(null);
   };
 
-  const handleHeroImageUpload = async (event) => {
+  const handleHeroImageSelect = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    try {
-      setError('');
-      const token = localStorage.getItem('adminToken');
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await api.post('/hero/upload-image', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setHeroFormData({ ...heroFormData, image: response.data.url });
-    } catch (err) {
-      setError('Failed to upload image');
-    } finally {
-      event.target.value = '';
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setHeroImageFile(file);
+    setHeroImagePreview(previewUrl);
+    setError('');
+    
+    // Clean up previous preview if editing
+    if (heroImagePreview && heroImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(heroImagePreview);
     }
+    
+    event.target.value = '';
   };
 
   const handleHeroSubmit = async () => {
@@ -344,13 +342,45 @@ const AdminDashboard = () => {
       setSuccess('');
       const token = localStorage.getItem('adminToken');
 
+      let imageUrl = heroFormData.image;
+
+      // Upload image if a new file was selected
+      if (heroImageFile) {
+        const formData = new FormData();
+        formData.append('image', heroImageFile);
+
+        const uploadResponse = await api.post('/hero/upload-image', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        imageUrl = uploadResponse.data.url;
+        
+        // Clean up preview URL
+        if (heroImagePreview && heroImagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(heroImagePreview);
+        }
+      }
+
+      if (!imageUrl) {
+        setError('Please select an image');
+        return;
+      }
+
+      const payload = {
+        image: imageUrl,
+        order: heroFormData.order,
+      };
+
       if (editingHero) {
-        await api.put(`/hero/${editingHero._id}`, heroFormData, {
+        await api.put(`/hero/${editingHero._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Hero slide updated successfully');
       } else {
-        await api.post('/hero', heroFormData, {
+        await api.post('/hero', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess('Hero slide created successfully');
@@ -724,49 +754,31 @@ const AdminDashboard = () => {
         </Dialog>
 
         {/* Hero Form Dialog */}
-        <Dialog open={heroDialogOpen} onClose={handleCloseHeroDialog} maxWidth="sm" fullWidth>
+        <Dialog open={heroDialogOpen} onClose={handleCloseHeroDialog} maxWidth="md" fullWidth>
           <DialogTitle>
             {editingHero ? 'Edit Hero Slide' : 'Add New Hero Slide'}
           </DialogTitle>
           <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                  Image
+                  Select Image
                 </Typography>
-                {heroFormData.image && (
-                  <Box
-                    component="img"
-                    src={heroFormData.image}
-                    alt="Hero preview"
-                    sx={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 1, mb: 2 }}
-                  />
-                )}
                 <input
                   type="file"
                   accept="image/*"
                   ref={heroFileInputRef}
-                  onChange={handleHeroImageUpload}
+                  onChange={handleHeroImageSelect}
                   style={{ display: 'none' }}
                 />
                 <Button
                   variant="outlined"
                   onClick={() => heroFileInputRef.current?.click()}
                   fullWidth
+                  sx={{ mb: 2 }}
                 >
-                  {heroFormData.image ? 'Change Image' : 'Upload Image'}
+                  {heroImagePreview ? 'Change Image' : 'Select Image'}
                 </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Label (Optional)"
-                  value={heroFormData.label}
-                  onChange={(e) => setHeroFormData({ ...heroFormData, label: e.target.value })}
-                  placeholder="e.g., Premium industrial minerals from Pakistan"
-                />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   type="number"
@@ -775,6 +787,40 @@ const AdminDashboard = () => {
                   onChange={(e) => setHeroFormData({ ...heroFormData, order: parseInt(e.target.value) || 0 })}
                   helperText="Lower numbers appear first"
                 />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Preview
+                </Typography>
+                {heroImagePreview ? (
+                  <Box
+                    component="img"
+                    src={heroImagePreview}
+                    alt="Hero preview"
+                    sx={{
+                      width: '100%',
+                      height: 300,
+                      objectFit: 'cover',
+                      borderRadius: 2,
+                      border: '2px solid #e0e0e0',
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 300,
+                      border: '2px dashed #e0e0e0',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f5f5f5',
+                    }}
+                  >
+                    <Typography color="text.secondary">No image selected</Typography>
+                  </Box>
+                )}
               </Grid>
             </Grid>
             {error && (
@@ -790,7 +836,7 @@ const AdminDashboard = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseHeroDialog}>Cancel</Button>
-            <Button onClick={handleHeroSubmit} variant="contained" disabled={!heroFormData.image}>
+            <Button onClick={handleHeroSubmit} variant="contained" disabled={!heroImagePreview && !heroFormData.image}>
               {editingHero ? 'Update' : 'Create'}
             </Button>
           </DialogActions>

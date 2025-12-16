@@ -24,6 +24,8 @@ const ProductDetail = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Scroll to top smoothly when component mounts or slug changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     fetchProduct();
   }, [slug]);
 
