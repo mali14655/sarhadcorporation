@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
 
 const theme = createTheme({
@@ -82,6 +83,7 @@ function App() {
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />
             <Box
