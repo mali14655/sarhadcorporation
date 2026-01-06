@@ -25,10 +25,17 @@ const Contact = () => {
 
     try {
       // EmailJS configuration
-      // Note: User needs to set up EmailJS service and get their keys
-      const serviceId = process.env.REACT_APP_EMAILJS_SERVICE_ID || 'your_service_id';
-      const templateId = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_template_id';
-      const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key';
+      const serviceId = process.env.REACT_APP_EMAILJS_SERVICE_ID;
+      const templateId = process.env.REACT_APP_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY;
+
+      // Validate EmailJS configuration
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error('Email service is not configured. Please contact the administrator.');
+      }
+
+      // Initialize EmailJS with public key
+      emailjs.init(publicKey);
 
       await emailjs.send(
         serviceId,
@@ -38,7 +45,8 @@ const Contact = () => {
           from_email: formData.email,
           subject: formData.subject,
           message: formData.message,
-          to_email: 'info@sarhadcorporation.com',
+          to_email: 'muhammadali.dev5@gmail.com',
+          reply_to: formData.email,
         },
         publicKey
       );
@@ -51,9 +59,10 @@ const Contact = () => {
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       console.error('EmailJS error:', error);
+      const errorMessage = error.text || error.message || 'Failed to send message. Please try again or contact us directly.';
       setSnackbar({
         open: true,
-        message: 'Failed to send message. Please try again or contact us directly.',
+        message: errorMessage,
         severity: 'error',
       });
     } finally {
