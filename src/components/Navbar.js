@@ -86,9 +86,12 @@ const Navbar = () => {
         position="sticky"
         elevation={0}
         sx={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
           color: '#0f172a',
-          borderBottom: '1px solid #e2e8f0',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s ease',
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', py: 1.5 }}>
@@ -137,7 +140,13 @@ const Navbar = () => {
                     fontWeight: 500,
                     fontSize: 14,
                     letterSpacing: 0.3,
-                    '&:hover': { color: '#1e3a5f', backgroundColor: '#f1f5f9' },
+                    borderRadius: 2,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': { 
+                      color: '#1e3a5f', 
+                      backgroundColor: '#f1f5f9',
+                      transform: 'translateY(-2px)',
+                    },
                   }}
                 >
                   {item.label}
@@ -151,8 +160,16 @@ const Navbar = () => {
                   color: '#ffffff',
                   borderRadius: 999,
                   px: 3,
-                  boxShadow: '0 10px 25px rgba(15,23,42,0.16)',
-                  '&:hover': { backgroundColor: '#15233f', boxShadow: '0 14px 35px rgba(15,23,42,0.22)' },
+                  boxShadow: '0 4px 12px rgba(30, 58, 95, 0.3)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': { 
+                    backgroundColor: '#15233f', 
+                    boxShadow: '0 6px 20px rgba(30, 58, 95, 0.4)',
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
                 }}
               >
                 Get in touch

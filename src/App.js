@@ -104,9 +104,24 @@ function App() {
                   color: '#ffffff',
                   width: 56,
                   height: 56,
-                  boxShadow: '0 6px 18px rgba(37,211,102,0.6)',
+                  boxShadow: '0 6px 18px rgba(37,211,102,0.6), 0 2px 8px rgba(37,211,102,0.4)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  animation: 'pulse 2s ease-in-out infinite',
                   '&:hover': {
                     backgroundColor: '#1ebe57',
+                    transform: 'scale(1.1) rotate(5deg)',
+                    boxShadow: '0 8px 24px rgba(37,211,102,0.7), 0 4px 12px rgba(37,211,102,0.5)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                  '@keyframes pulse': {
+                    '0%, 100%': {
+                      boxShadow: '0 6px 18px rgba(37,211,102,0.6), 0 2px 8px rgba(37,211,102,0.4)',
+                    },
+                    '50%': {
+                      boxShadow: '0 8px 24px rgba(37,211,102,0.8), 0 4px 12px rgba(37,211,102,0.6)',
+                    },
                   },
                 }}
               >

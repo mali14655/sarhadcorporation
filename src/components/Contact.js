@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Container, Typography, TextField, Button, Grid, Alert, Snackbar } from '@mui/material';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import emailjs from '@emailjs/browser';
 
 const Contact = () => {
@@ -11,6 +12,9 @@ const Contact = () => {
   });
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [titleRef, titleVisible] = useScrollAnimation();
+  const [formRef, formVisible] = useScrollAnimation();
+  const [mapRef, mapVisible] = useScrollAnimation();
 
   const handleChange = (e) => {
     setFormData({
@@ -73,44 +77,61 @@ const Contact = () => {
   return (
     <Box id="contact" sx={{ py: { xs: 6, md: 10 }, backgroundColor: '#f8f9fa' }}>
       <Container maxWidth="lg">
-        <Typography
-          variant="h2"
+        <Box
+          ref={titleRef}
           sx={{
-            textAlign: 'center',
-            mb: 3,
-            fontWeight: 600,
-            color: '#1e3a5f',
-            fontSize: { xs: '1.8rem', md: '2.4rem' },
+            opacity: titleVisible ? 1 : 0,
+            transform: titleVisible ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'opacity 0.8s ease, transform 0.8s ease',
           }}
         >
-          Contact us
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            textAlign: 'center',
-            mb: 6,
-            maxWidth: '800px',
-            mx: 'auto',
-            color: '#4a5568',
-            fontSize: '1.1rem',
-          }}
-        >
-          We would love to hear from you! Whether you have inquiries about our gemstones, need 
-          expert guidance, or want to discuss business opportunities, our team is here to assist you. 
-          Connect with us today and let Sarhad Corporation be your trusted partner for premium-quality gemstones.
-        </Typography>
+          <Typography
+            variant="h2"
+            sx={{
+              textAlign: 'center',
+              mb: 3,
+              fontWeight: 600,
+              color: '#1e3a5f',
+              fontSize: { xs: '1.8rem', md: '2.4rem' },
+            }}
+          >
+            Contact us
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              mb: 6,
+              maxWidth: '800px',
+              mx: 'auto',
+              color: '#4a5568',
+              fontSize: '1.1rem',
+            }}
+          >
+            We would love to hear from you! Whether you have inquiries about our gemstones, need 
+            expert guidance, or want to discuss business opportunities, our team is here to assist you. 
+            Connect with us today and let Sarhad Corporation be your trusted partner for premium-quality gemstones.
+          </Typography>
+        </Box>
 
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
             <Box
+              ref={formRef}
               component="form"
               onSubmit={handleSubmit}
               sx={{
                 backgroundColor: '#ffffff',
-                p: 4,
+                p: 4.5,
                 borderRadius: 3,
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.08)',
+                opacity: formVisible ? 1 : 0,
+                transform: formVisible ? 'translateX(0)' : 'translateX(-40px)',
+                transition: 'opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s, box-shadow 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)',
+                },
               }}
             >
               <Grid container spacing={3}>
@@ -173,8 +194,16 @@ const Contact = () => {
                       color: '#ffffff',
                       py: 1.5,
                       fontSize: '1.1rem',
+                      borderRadius: 2,
+                      boxShadow: '0 4px 12px rgba(30, 58, 95, 0.3)',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': {
                         backgroundColor: '#2d4f7a',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 20px rgba(30, 58, 95, 0.4)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
                       },
                     }}
                   >
@@ -187,13 +216,21 @@ const Contact = () => {
 
           <Grid item xs={12} md={6}>
             <Box
+              ref={mapRef}
               sx={{
                 height: '100%',
                 minHeight: 320,
                 borderRadius: 3,
                 overflow: 'hidden',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                opacity: mapVisible ? 1 : 0,
+                transform: mapVisible ? 'translateX(0)' : 'translateX(40px)',
+                transition: 'opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s, box-shadow 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
               <iframe

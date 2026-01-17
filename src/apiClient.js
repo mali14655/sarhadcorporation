@@ -1,6 +1,28 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+// Automatically detect backend URL:
+// - If running on localhost, ALWAYS use local backend (even if env is set)
+// - If REACT_APP_API_BASE_URL is set and not on localhost, use it
+// - Otherwise, use production backend
+const getApiBaseUrl = () => {
+  // If running on localhost, ALWAYS use local backend for development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  
+  // If explicitly set in env and not on localhost, use that
+  if (process.env.REACT_APP_API_BASE_URL && 
+      !process.env.REACT_APP_API_BASE_URL.includes('your-backend-domain')) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  
+  // Otherwise, use production backend
+  return 'https://sarhadcorporationbackend.vercel.app/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+console.log('API Base URL:', API_BASE_URL);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

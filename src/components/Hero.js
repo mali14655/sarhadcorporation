@@ -161,7 +161,22 @@ const Hero = () => {
             <CircularProgress sx={{ color: '#ffffff' }} />
           </Box>
         ) : (
-          <Box sx={{ maxWidth: { xs: '100%', md: 620 } }}>
+          <Box 
+            sx={{ 
+              maxWidth: { xs: '100%', md: 620 },
+              animation: 'fadeInUp 1s ease-out',
+              '@keyframes fadeInUp': {
+                from: {
+                  opacity: 0,
+                  transform: 'translateY(40px)',
+                },
+                to: {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
+            }}
+          >
           <Chip
             label="Producers & Exporters • Since 1998"
             sx={{
@@ -172,10 +187,30 @@ const Hero = () => {
               borderRadius: 999,
               backdropFilter: 'blur(6px)',
               border: '1px solid rgba(148, 163, 184, 0.4)',
+              animation: 'fadeIn 0.8s ease-out 0.2s both',
+              '@keyframes fadeIn': {
+                from: { opacity: 0 },
+                to: { opacity: 1 },
+              },
             }}
           />
 
-          <Box sx={{ mb: 2 }}>
+          <Box 
+            sx={{ 
+              mb: 2,
+              animation: 'fadeInUp 1s ease-out 0.3s both',
+              '@keyframes fadeInUp': {
+                from: {
+                  opacity: 0,
+                  transform: 'translateY(30px)',
+                },
+                to: {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
+            }}
+          >
             <Typography
               variant="h1"
               sx={{
@@ -210,6 +245,17 @@ const Hero = () => {
               fontSize: { xs: '0.98rem', md: '1.08rem' },
               maxWidth: 640,
               mb: 1.5,
+              animation: 'fadeInUp 1s ease-out 0.5s both',
+              '@keyframes fadeInUp': {
+                from: {
+                  opacity: 0,
+                  transform: 'translateY(20px)',
+                },
+                to: {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
             }}
           >
             At Sarhad Corporation, we mine, process, and export premium industrial minerals
@@ -223,6 +269,17 @@ const Hero = () => {
               maxWidth: 640,
               lineHeight: 1.8,
               mb: 4,
+              animation: 'fadeInUp 1s ease-out 0.7s both',
+              '@keyframes fadeInUp': {
+                from: {
+                  opacity: 0,
+                  transform: 'translateY(20px)',
+                },
+                to: {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
             }}
           >
             Backed by long-term leases and strict quality control, we deliver consistent,
@@ -232,7 +289,21 @@ const Hero = () => {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={2.5}
-            sx={{ pt: 1, alignItems: { xs: 'stretch', sm: 'center' } }}
+            sx={{ 
+              pt: 1, 
+              alignItems: { xs: 'stretch', sm: 'center' },
+              animation: 'fadeInUp 1s ease-out 0.9s both',
+              '@keyframes fadeInUp': {
+                from: {
+                  opacity: 0,
+                  transform: 'translateY(20px)',
+                },
+                to: {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
+            }}
           >
             <Button
               variant="contained"
@@ -245,7 +316,12 @@ const Hero = () => {
                 borderRadius: 999,
                 boxShadow: '0 8px 20px rgba(56,189,248,0.25)',
                 fontWeight: 600,
-                '&:hover': { backgroundColor: '#0ea5e9', boxShadow: '0 10px 25px rgba(56,189,248,0.35)' },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': { 
+                  backgroundColor: '#0ea5e9', 
+                  boxShadow: '0 10px 25px rgba(56,189,248,0.35)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
               View mineral portfolio
