@@ -23,12 +23,6 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Scroll to top smoothly when component mounts or slug changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    fetchProduct();
-  }, [slug]);
-
   const fetchProduct = async () => {
     try {
       const response = await api.get(`/products/${slug}`);
@@ -39,6 +33,13 @@ const ProductDetail = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Scroll to top smoothly when component mounts or slug changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   if (loading) {
     return (
