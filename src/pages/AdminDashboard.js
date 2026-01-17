@@ -19,13 +19,12 @@ import {
   DialogActions,
   TextField,
   Grid,
-  FormControlLabel,
-  Switch,
   Alert,
   CircularProgress,
   Chip,
   Tabs,
   Tab,
+  Snackbar,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -48,17 +47,15 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: '',
-    specifications: {},
-    applications: [],
     cloudinaryImages: [],
-    isFeatured: false,
   });
-  const [specKey, setSpecKey] = useState('');
-  const [specValue, setSpecValue] = useState('');
-  const [application, setApplication] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const fileInputRef = useRef(null);
   const heroFileInputRef = useRef(null);
   const [heroFormData, setHeroFormData] = useState({
@@ -109,22 +106,14 @@ const AdminDashboard = () => {
       setFormData({
         name: product.name || '',
         description: product.description || '',
-        category: product.category || '',
-        specifications: product.specifications || {},
-        applications: product.applications || [],
         cloudinaryImages: product.cloudinaryImages || [],
-        isFeatured: product.isFeatured || false,
       });
     } else {
       setEditingProduct(null);
       setFormData({
         name: '',
         description: '',
-        category: '',
-        specifications: {},
-        applications: [],
         cloudinaryImages: [],
-        isFeatured: false,
       });
     }
     setDialogOpen(true);
@@ -138,50 +127,10 @@ const AdminDashboard = () => {
     setFormData({
       name: '',
       description: '',
-      category: '',
-      specifications: {},
-      applications: [],
       cloudinaryImages: [],
-      isFeatured: false,
     });
   };
 
-  const handleAddSpec = () => {
-    if (specKey && specValue) {
-      setFormData({
-        ...formData,
-        specifications: {
-          ...formData.specifications,
-          [specKey]: specValue,
-        },
-      });
-      setSpecKey('');
-      setSpecValue('');
-    }
-  };
-
-  const handleRemoveSpec = (key) => {
-    const newSpecs = { ...formData.specifications };
-    delete newSpecs[key];
-    setFormData({ ...formData, specifications: newSpecs });
-  };
-
-  const handleAddApplication = () => {
-    if (application && !formData.applications.includes(application)) {
-      setFormData({
-        ...formData,
-        applications: [...formData.applications, application],
-      });
-      setApplication('');
-    }
-  };
-
-  const handleRemoveApplication = (app) => {
-    setFormData({
-      ...formData,
-      applications: formData.applications.filter((a) => a !== app),
-    });
-  };
 
   const handleImageUpload = () => {
     // Open native file picker
@@ -195,6 +144,7 @@ const AdminDashboard = () => {
     if (!files.length) return;
 
     try {
+      setUploadingImages(true);
       setError('');
       const token = localStorage.getItem('adminToken');
       const formDataUpload = new FormData();
@@ -209,7 +159,11 @@ const AdminDashboard = () => {
 
       const urls = response.data.urls || [];
       if (!urls.length) {
-        setError('No images were returned from the server.');
+        setSnackbar({
+          open: true,
+          message: 'No images were returned from the server.',
+          severity: 'error',
+        });
         return;
       }
 
@@ -217,14 +171,24 @@ const AdminDashboard = () => {
         ...prev,
         cloudinaryImages: [...(prev.cloudinaryImages || []), ...urls],
       }));
+      setSnackbar({
+        open: true,
+        message: `${urls.length} image(s) uploaded successfully!`,
+        severity: 'success',
+      });
     } catch (uploadError) {
       console.error('Image upload error:', uploadError);
-      setError(
+      const errorMessage =
         uploadError.response?.data?.message ||
-          uploadError.message ||
-          'Failed to upload image to server. Please try again.'
-      );
+        uploadError.message ||
+        'Failed to upload image to server. Please try again.';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
     } finally {
+      setUploadingImages(false);
       // Reset input so selecting the same files again still triggers onChange
       event.target.value = '';
     }
@@ -239,6 +203,7 @@ const AdminDashboard = () => {
 
   const handleSubmit = async () => {
     try {
+      setSubmitting(true);
       setError('');
       setSuccess('');
       const token = localStorage.getItem('adminToken');
@@ -251,34 +216,62 @@ const AdminDashboard = () => {
         await api.put(`/products/${editingProduct._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Product updated successfully');
+        setSnackbar({
+          open: true,
+          message: 'Product updated successfully!',
+          severity: 'success',
+        });
       } else {
         await api.post('/products', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Product created successfully');
+        setSnackbar({
+          open: true,
+          message: 'Product created successfully!',
+          severity: 'success',
+        });
       }
 
       fetchProducts();
       setTimeout(() => {
         handleCloseDialog();
-      }, 1500);
+      }, 1000);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save product');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save product';
+      setError(errorMessage);
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
+        setDeletingId(id);
         const token = localStorage.getItem('adminToken');
         await api.delete(`/products/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Product deleted successfully');
+        setSnackbar({
+          open: true,
+          message: 'Product deleted successfully!',
+          severity: 'success',
+        });
         fetchProducts();
       } catch (err) {
-        setError('Failed to delete product');
+        const errorMessage = err.response?.data?.message || 'Failed to delete product';
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -338,6 +331,7 @@ const AdminDashboard = () => {
 
   const handleHeroSubmit = async () => {
     try {
+      setSubmitting(true);
       setError('');
       setSuccess('');
       const token = localStorage.getItem('adminToken');
@@ -346,10 +340,11 @@ const AdminDashboard = () => {
 
       // Upload image if a new file was selected
       if (heroImageFile) {
-        const formData = new FormData();
-        formData.append('image', heroImageFile);
-
         try {
+          setUploadingHeroImage(true);
+          const formData = new FormData();
+          formData.append('image', heroImageFile);
+
           const uploadResponse = await api.post('/hero/upload-image', formData, {
             headers: {
               // Don't set Content-Type - let browser set it with boundary for FormData
@@ -357,16 +352,23 @@ const AdminDashboard = () => {
           });
 
           imageUrl = uploadResponse.data.url;
+          setUploadingHeroImage(false);
         } catch (uploadError) {
           console.error('Upload error:', uploadError);
+          setUploadingHeroImage(false);
           const errorMessage = uploadError.response?.data?.message || uploadError.message || 'Failed to upload image';
           setError(errorMessage);
+          setSnackbar({
+            open: true,
+            message: errorMessage,
+            severity: 'error',
+          });
           return;
-        }
-        
-        // Clean up preview URL
-        if (heroImagePreview && heroImagePreview.startsWith('blob:')) {
-          URL.revokeObjectURL(heroImagePreview);
+        } finally {
+          // Clean up preview URL
+          if (heroImagePreview && heroImagePreview.startsWith('blob:')) {
+            URL.revokeObjectURL(heroImagePreview);
+          }
         }
       }
 
@@ -384,34 +386,62 @@ const AdminDashboard = () => {
         await api.put(`/hero/${editingHero._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Hero slide updated successfully');
+        setSnackbar({
+          open: true,
+          message: 'Hero slide updated successfully!',
+          severity: 'success',
+        });
       } else {
         await api.post('/hero', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Hero slide created successfully');
+        setSnackbar({
+          open: true,
+          message: 'Hero slide created successfully!',
+          severity: 'success',
+        });
       }
 
       fetchHeroSlides();
       setTimeout(() => {
         handleCloseHeroDialog();
-      }, 1500);
+      }, 1000);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save hero slide');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save hero slide';
+      setError(errorMessage);
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDeleteHero = async (id) => {
     if (window.confirm('Are you sure you want to delete this hero slide?')) {
       try {
+        setDeletingId(id);
         const token = localStorage.getItem('adminToken');
         await api.delete(`/hero/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccess('Hero slide deleted successfully');
+        setSnackbar({
+          open: true,
+          message: 'Hero slide deleted successfully!',
+          severity: 'success',
+        });
         fetchHeroSlides();
       } catch (err) {
-        setError('Failed to delete hero slide');
+        const errorMessage = err.response?.data?.message || 'Failed to delete hero slide';
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -490,9 +520,7 @@ const AdminDashboard = () => {
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
                 <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Images</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Featured</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -500,15 +528,7 @@ const AdminDashboard = () => {
               {products.map((product) => (
                 <TableRow key={product._id}>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category || 'N/A'}</TableCell>
                   <TableCell>{product.cloudinaryImages?.length || 0} images</TableCell>
-                  <TableCell>
-                    {product.isFeatured ? (
-                      <Chip label="Yes" color="primary" size="small" />
-                    ) : (
-                      <Chip label="No" size="small" />
-                    )}
-                  </TableCell>
                   <TableCell>
                     <IconButton
                       onClick={() => handleOpenDialog(product)}
@@ -521,8 +541,9 @@ const AdminDashboard = () => {
                       onClick={() => handleDelete(product._id)}
                       color="error"
                       size="small"
+                      disabled={deletingId === product._id}
                     >
-                      <DeleteIcon />
+                      {deletingId === product._id ? <CircularProgress size={20} /> : <DeleteIcon />}
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -575,8 +596,9 @@ const AdminDashboard = () => {
                           onClick={() => handleDeleteHero(hero._id)}
                           color="error"
                           size="small"
+                          disabled={deletingId === hero._id}
                         >
-                          <DeleteIcon />
+                          {deletingId === hero._id ? <CircularProgress size={20} /> : <DeleteIcon />}
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -615,71 +637,6 @@ const AdminDashboard = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                  Specifications
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <TextField
-                    label="Key"
-                    value={specKey}
-                    onChange={(e) => setSpecKey(e.target.value)}
-                    size="small"
-                  />
-                  <TextField
-                    label="Value"
-                    value={specValue}
-                    onChange={(e) => setSpecValue(e.target.value)}
-                    size="small"
-                  />
-                  <Button onClick={handleAddSpec} variant="outlined" size="small">
-                    Add
-                  </Button>
-                </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {Object.entries(formData.specifications).map(([key, value]) => (
-                    <Chip
-                      key={key}
-                      label={`${key}: ${value}`}
-                      onDelete={() => handleRemoveSpec(key)}
-                    />
-                  ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                  Applications
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Application"
-                    value={application}
-                    onChange={(e) => setApplication(e.target.value)}
-                    size="small"
-                  />
-                  <Button onClick={handleAddApplication} variant="outlined" size="small">
-                    Add
-                  </Button>
-                </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {formData.applications.map((app, index) => (
-                    <Chip
-                      key={index}
-                      label={app}
-                      onDelete={() => handleRemoveApplication(app)}
-                    />
-                  ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
                 <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
                   Images (Upload via Cloudinary)
                 </Typography>
@@ -687,9 +644,11 @@ const AdminDashboard = () => {
                   <Button
                     variant="outlined"
                     onClick={handleImageUpload}
+                    disabled={uploadingImages}
                     sx={{ mb: 2 }}
+                    startIcon={uploadingImages ? <CircularProgress size={16} /> : null}
                   >
-                    Upload Images
+                    {uploadingImages ? 'Uploading...' : 'Upload Images'}
                   </Button>
                   <input
                     type="file"
@@ -728,17 +687,6 @@ const AdminDashboard = () => {
                   </Box>
                 )}
               </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.isFeatured}
-                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    />
-                  }
-                  label="Featured Product"
-                />
-              </Grid>
             </Grid>
             {error && (
               <Alert severity="error" sx={{ mt: 2 }}>
@@ -752,9 +700,16 @@ const AdminDashboard = () => {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSubmit} variant="contained" disabled={!formData.name || !formData.description}>
-              {editingProduct ? 'Update' : 'Create'}
+            <Button onClick={handleCloseDialog} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={!formData.name || !formData.description || submitting}
+              startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
+            >
+              {submitting ? (editingProduct ? 'Updating...' : 'Creating...') : editingProduct ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </Dialog>
@@ -781,9 +736,10 @@ const AdminDashboard = () => {
                   variant="outlined"
                   onClick={() => heroFileInputRef.current?.click()}
                   fullWidth
+                  disabled={uploadingHeroImage}
                   sx={{ mb: 2 }}
                 >
-                  {heroImagePreview ? 'Change Image' : 'Select Image'}
+                  {uploadingHeroImage ? 'Uploading...' : heroImagePreview ? 'Change Image' : 'Select Image'}
                 </Button>
                 <TextField
                   fullWidth
@@ -841,12 +797,43 @@ const AdminDashboard = () => {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseHeroDialog}>Cancel</Button>
-            <Button onClick={handleHeroSubmit} variant="contained" disabled={!heroImagePreview && !heroFormData.image}>
-              {editingHero ? 'Update' : 'Create'}
+            <Button onClick={handleCloseHeroDialog} disabled={submitting || uploadingHeroImage}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleHeroSubmit}
+              variant="contained"
+              disabled={(!heroImagePreview && !heroFormData.image) || submitting || uploadingHeroImage}
+              startIcon={submitting || uploadingHeroImage ? <CircularProgress size={16} color="inherit" /> : null}
+            >
+              {uploadingHeroImage
+                ? 'Uploading...'
+                : submitting
+                ? editingHero
+                  ? 'Updating...'
+                  : 'Creating...'
+                : editingHero
+                ? 'Update'
+                : 'Create'}
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Snackbar for Toast Notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );

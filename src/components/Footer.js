@@ -47,9 +47,10 @@ const Footer = () => {
               Contact Info
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9, lineHeight: 1.8 }}>
-              Email: info@sarhadcorporation.com<br />
-              Phone: +92-XXX-XXXXXXX<br />
-              Address: Pakistan
+              Email: sarhadcorpo@gmail.com<br />
+              Phone: 0345-9090973<br />
+              Address: Plot 38/A, street B3 Industrial Estate Rd,<br />
+              Hayatabad, Peshawar, Pakistan
             </Typography>
           </Grid>
         </Grid>

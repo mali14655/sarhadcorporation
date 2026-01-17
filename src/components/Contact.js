@@ -45,7 +45,7 @@ const Contact = () => {
           from_email: formData.email,
           subject: formData.subject,
           message: formData.message,
-          to_email: 'muhammadali.dev5@gmail.com',
+          to_email: 'sarhadcorpo@gmail.com',
           reply_to: formData.email,
         },
         publicKey
@@ -198,7 +198,7 @@ const Contact = () => {
             >
               <iframe
                 title="Sarhad Corporation Location"
-                src="https://www.google.com/maps?q=Sarhad%20Board%20%26%20Chemicals%20Pvt%20Ltd%2C%20Hayatabad%2C%20Peshawar&output=embed"
+                src="https://www.google.com/maps?q=Plot%2038%2FA%2C%20street%20B3%20Industrial%20Estate%20Rd%2C%20Hayatabad%2C%20Peshawar%2C%20Pakistan&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

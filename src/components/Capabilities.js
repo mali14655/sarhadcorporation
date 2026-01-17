@@ -63,16 +63,8 @@ const Capabilities = () => {
                 Quartz, Dolomite, Brite, Mica and more.
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                <Chip
-                  size="small"
-                  label="High purity"
-                  sx={{ bgcolor: '#ecfdf3', color: '#166534' }}
-                />
-                <Chip
-                  size="small"
-                  label="Consistent sizing"
-                  sx={{ bgcolor: '#eff6ff', color: '#1d4ed8' }}
-                />
+                <Chip size="small" label="High purity" />
+                <Chip size="small" label="Consistent sizing" />
               </Box>
             </Paper>
           </Grid>

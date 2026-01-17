@@ -88,10 +88,10 @@ const Products = () => {
                 justifyContent: { xs: 'flex-start', md: 'flex-end' },
               }}
             >
-              <Chip label="Fertilizer grade" sx={{ bgcolor: '#e0f2fe', color: '#0369a1' }} />
-              <Chip label="Ceramics & glass" sx={{ bgcolor: '#ede9fe', color: '#5b21b6' }} />
-              <Chip label="Paints & coatings" sx={{ bgcolor: '#fef3c7', color: '#92400e' }} />
-              <Chip label="Custom sizing" sx={{ bgcolor: '#ecfdf3', color: '#166534' }} />
+              <Chip label="Fertilizer grade" />
+              <Chip label="Ceramics & glass" />
+              <Chip label="Paints & coatings" />
+              <Chip label="Custom sizing" />
             </Box>
           </Grid>
         </Grid>
